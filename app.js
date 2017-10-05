@@ -146,7 +146,7 @@ ApiRouter.get('/',function(req, res){
   res.json({message:"API Version 1.0 status: ONLINE"});
 })
 ApiRouter.post('/login',apiv1AuthController.login);
-ApiRouter.get('/link',passportConfig.isAuthenticated,apiv1LinkController.getList);
+ApiRouter.get('/link',passport.authenticate('jwt', { session: false }), apiv1LinkController.getList);
 
 app.get('/api', apiController.getApi);
 app.get('/api/lastfm', apiController.getLastfm);

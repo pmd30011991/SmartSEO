@@ -32,11 +32,11 @@ passport.deserializeUser((id, done) => {
  * Sing in using JWT 
  */
 var jwtOptions = {}
-jwtOptions.jwtFromRequest = ExtractJwt.fromBodyField();
+jwtOptions.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 jwtOptions.secretOrKey = 'tasmanianDevil';
 passport.use(new JWTStrategy(jwtOptions, function(jwtPayload, next){
   console.log('payload received',jwtPayload);
-  User.findOne({ id: jwtPayload.id }, (err, user) => {
+  User.findOne({ _id: jwtPayload.id }, (err, user) => {
     if (err) {
       return next(err, false);
     }
@@ -531,7 +531,16 @@ passport.use('pinterest', new OAuth2Strategy({
     });
   }
 ));
-
+/**
+ * Login Required middleware for API
+ */
+exports.isTokenAuthenticated = (req, res, next) => {
+  if(req.isAuthenticated()) {
+    return next();
+  };
+  return res.json({message:'Login Required'});
+}
+ 
 /**
  * Login Required middleware.
  */
