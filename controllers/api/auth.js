@@ -2,7 +2,7 @@
 const User = require('../../models/User');
 const jwt = require('jsonwebtoken');
 var jwtOptions = {}
-jwtOptions.secretOrKey = 'tasmanianDevil';
+jwtOptions.secretOrKey = process.env.SESSION_SECRET;
 exports.login =  function(req, res) {
     if(req.body.username && req.body.password){
         var username = req.body.username;

@@ -33,7 +33,7 @@ passport.deserializeUser((id, done) => {
  */
 var jwtOptions = {}
 jwtOptions.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
-jwtOptions.secretOrKey = 'tasmanianDevil';
+jwtOptions.secretOrKey = process.env.SESSION_SECRET;
 passport.use(new JWTStrategy(jwtOptions, function(jwtPayload, next){
   console.log('payload received',jwtPayload);
   User.findOne({ _id: jwtPayload.id }, (err, user) => {

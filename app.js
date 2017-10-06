@@ -40,11 +40,15 @@ const apiv1LinkController = require('./controllers/api/link');
  * API keys and Passport configuration.
  */
 const passportConfig = require('./config/passport');
-
+//const ioConfig = require('./config/io.js');
 /**
  * Create Express server.
  */
 const app = express();
+const server = require('http').Server(app);
+const io = require('socket.io')(server,{'transports': ['websocket', 'polling']});
+var cookieParser = require('cookie-parser');
+var passportSocketIo = require('passport.socketio');
 
 /**
  * Connect to MongoDB.
@@ -64,7 +68,7 @@ app.set('host', process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0');
 app.set('port', process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
-app.use(expressStatusMonitor());
+//app.use(expressStatusMonitor());
 app.use(compression());
 app.use(sass({
   src: path.join(__dirname, 'public'),
@@ -230,13 +234,47 @@ app.get('/auth/pinterest/callback', passport.authorize('pinterest', { failureRed
  * Error Handler.
  */
 app.use(errorHandler());
+io.set('log level', 3); 
+io.use(passportSocketIo.authorize({
+  key: 'connect.sid',
+  secret: process.env.SESSION_SECRET,
+  store:  new MongoStore({
+    url: process.env.MONGODB_URI || process.env.MONGOLAB_URI,
+    autoReconnect: true,
+    clear_interval: 3600
+  }),
+  passport: passport,
+  cookieParser: cookieParser
+}));
+io.on('connection',function(socket){
 
-/**
+   // Create event handlers for this socket
+  //  var eventHandlers = {
+  //       chat: new Chat(app, socket),
+  //       user: new User(app, socket)
+  //   };
+
+  //   // Bind events to handlers
+  //   for (var category in eventHandlers) {
+  //       var handler = eventHandlers[category].handler;
+  //       for (var event in handler) {
+  //           socket.on(event, handler[event]);
+  //       }
+  //   }
+
+  //   // Keep track of the socket
+  //   app.allSockets.push(socket);
+    socket.on('eventMessage',apiv1LinkController.event.bind(apiv1LinkController.event,socket));
+})
+io.on('disconnect', function () {
+  console.log("Socket disconnected");
+});
+
+/** 
  * Start Express server.
  */
-app.listen(app.get('port'), () => {
+server.listen(app.get('port'), () => {
   console.log('%s App is running at http://localhost:%d in %s mode', chalk.green('✓'), app.get('port'), app.get('env'));
   console.log('  Press CTRL-C to stop\n');
 });
-
 module.exports = app;
